@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <Arduino.h>
+#include <main_file.h>
 
 #define CONTROL_SPEED_MOTOR_LEFT    6
 #define ENABLE1_MOTOR_LEFT          8
@@ -21,12 +22,41 @@
 #define CONTROL_SPEED(controlSpeed, value)       analogWrite(controlSpeed, value);
 #define ENABLE_MOTOR(enableMotor, level)         digitalWrite(enableMotor, level);
 
+#define LINE_SENSOR_LEFT            A1
+#define LINE_SENSOR_RIGHT           A3
+
+#define READ_SENSOR_LEFT                         analogRead(LINE_SENSOR_LEFT);
+#define READ_SENSOR_RIGHT                        analogRead(LINE_SENSOR_RIGHT);
+
+#define HANDLE_UART(condition, action, modeReturn)  if(Serial.available()){\
+                                                        if(Serial.read() == condition){\
+                                                            action();\
+                                                            uint8_t *ptr = modeReturn;\
+                                                            *ptr = MODE_DEFAULT;\
+                                                            return;\
+                                                        }\
+                                                    }
+#define TEST(a, b)  a(); uint8_t *ptr = b; *ptr = MODE_DEFAULT; return;
+typedef enum{
+    LEFT = -1,
+    MID,
+    RIGHT,
+    STOP_LINE
+}LineDetect;
+
+extern uint8_t modeControl;
 
 class Car{
     private:
         uint8_t speedMotorLeftInit;
         uint8_t speedMotorRightInit;
+        uint8_t Kp;
+        uint8_t Ki;
+        uint8_t Kd;
+        double calculatePID(int8_t error);
+        int8_t lineDetection();
     public:
+        Car(){Kp = 10; Ki = 3; Kd = 5;};
         void speedMotorInit(uint8_t speedMotorLeft, uint8_t speedMotorRight);
         void goForward();
         void goBackward();

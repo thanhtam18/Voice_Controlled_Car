@@ -22,7 +22,6 @@ void Car :: speedMotorInit(uint8_t speedMotorLeft, uint8_t speedMotorRight){
     Ouput: None
 */
 void Car :: goForward(){
-    Serial.println("Forward");
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, speedMotorLeftInit);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, speedMotorRightInit);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
@@ -38,7 +37,6 @@ void Car :: goForward(){
     Ouput: None
 */
 void Car :: goBackward(){
-    Serial.println("Backward");
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, speedMotorLeftInit);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, speedMotorRightInit);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
@@ -54,7 +52,15 @@ void Car :: goBackward(){
     Ouput: None
 */
 void Car :: turnLeft(){
-    Serial.println("Turn left");
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 240);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+    delay(500);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
 }
 
 /*
@@ -64,7 +70,15 @@ void Car :: turnLeft(){
     Ouput: None
 */
 void Car :: turnRight(){
-    Serial.println("Turn right");
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 240);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+    delay(500);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
 }
 
 /*
@@ -74,7 +88,6 @@ void Car :: turnRight(){
     Ouput: None
 */
 void Car :: stop(){
-    Serial.println("Stop");
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
@@ -83,10 +96,66 @@ void Car :: stop(){
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
 }
 
+/*
+    Function: turnLeft
+    Description: This function will make follow the line
+    Input: None
+    Ouput: None
+*/
 void Car :: lineFollower(){
-    Serial.println("Line Follower");
+    // ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    // ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    // ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+    // ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+    // double PID;
+    // int8_t lineDetected;
+    // while((lineDetected = lineDetection()) != STOP_LINE){
+    //     PID = calculatePID(lineDetected);
+    //     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain((speedMotorLeftInit + PID),0, 255));
+    //     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain((speedMotorRightInit - PID),0, 255));
+    //     HANDLE_UART(STOP, stop, &modeControl);
+    // } 
+    // stop();
+    Serial.println("Follow line");
+    TEST(stop,&modeControl);
 }
 
 void Car :: obstacleAvoiding(){
     Serial.println("Obstacle Avoiding");
+}
+
+/*
+    Function: lineDetection
+    Description: Read line sensor
+    Input: None
+    Ouput: Error value
+*/
+int8_t Car :: lineDetection(){
+    uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
+    uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
+    if(leftSensorAnalog > 400)
+        return LEFT;
+    else if(rightSensorAnalog > 400)
+        return RIGHT;
+    else    
+        return STOP_LINE;
+    return MID;
+}
+
+/*
+    Function: calculatePID
+    Description: Calculate PID value
+    Input: Error value after detected line 
+    Ouput: PID value
+*/
+double Car :: calculatePID(int8_t error){
+    register uint8_t l_Kp = this->Kp;
+    register uint8_t l_Ki = this->Ki;
+    register uint8_t l_Kd = this->Kd;
+    static int8_t lastError;
+    static int8_t integral;
+    integral += error;
+    int8_t derivative = error - lastError;
+    lastError = error;
+    return (l_Kp * error + l_Ki * integral + l_Kd * derivative);
 }
