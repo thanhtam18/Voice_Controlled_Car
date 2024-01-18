@@ -1,62 +1,63 @@
 #include <Arduino.h>
 #include <main_file.h>
 #include <try_catch.h>
+#include <Servo.h>
 #include <motor_control.h>
 
-uint8_t modeControl = MODE_TWO;
+uint8_t modeControl = MODE_THREE;
 Car myCar;
+
+Servo myServo;
 
 void setup() {
   Serial.begin(9600);
   GPIO_Init();
   myCar.speedMotorInit(150,190);
+  myServo.attach(11);
+  myServo.write(180);
+  while(1);
 }
 
 
 void loop() {
-  if(modeControl == MODE_TWO)
+  if(Serial.available()){
+    uint8_t receiveHexValue = Serial.read();
+    if((receiveHexValue & 0x08) && !(modeControl - MODE_ONE)){
+      THROW((Command)receiveHexValue);
+    }
+    switch(receiveHexValue){
+      case 0x01:
+        ledToggle(1);
+        modeControl = MODE_ONE;
+        break;
+      case 0x02:
+        ledToggle(2);
+        modeControl = MODE_TWO;
+        break;
+      case 0x03:
+        ledToggle(3);
+        modeControl = MODE_THREE;
+        break;
+    }
+  }
+  if(modeControl == MODE_ONE){
+    TRY(FORWARD)
+      myCar.goForward();
+    CATCH(BACKWARD)
+      myCar.goBackward();
+    CATCH(TURN_LEFT)
+      myCar.turnLeft();
+    CATCH(TURN_RIGHT)
+      myCar.turnRight();
+    CATCH(STOP)
+      myCar.stop();
+  }
+  else if(modeControl == MODE_TWO){
     myCar.lineFollower();
-  if(modeControl == MODE_DEFAULT)
-    Serial.println("Default");
-  delay(1000);
-  // if(Serial.available()){
-  //   uint8_t receiveHexValue = Serial.read();
-  //   if((receiveHexValue & 0x08) && !(modeControl - MODE_ONE)){
-  //     THROW((Command)receiveHexValue);
-  //   }
-  //   switch(receiveHexValue){
-  //     case 0x01:
-  //       ledToggle(1);
-  //       modeControl = MODE_ONE;
-  //       break;
-  //     case 0x02:
-  //       ledToggle(2);
-  //       modeControl = MODE_TWO;
-  //       break;
-  //     case 0x03:
-  //       ledToggle(3);
-  //       modeControl = MODE_THREE;
-  //       break;
-  //   }
-  // }
-  // if(modeControl == MODE_ONE){
-  //   TRY(FORWARD)
-  //     myCar.goForward();
-  //   CATCH(BACKWARD)
-  //     myCar.goBackward();
-  //   CATCH(TURN_LEFT)
-  //     myCar.turnLeft();
-  //   CATCH(TURN_RIGHT)
-  //     myCar.turnRight();
-  //   CATCH(STOP)
-  //     myCar.stop();
-  // }
-  // else if(modeControl == MODE_TWO){
-  //   myCar.lineFollower();
-  // }
-  // else if(modeControl == MODE_THREE){
-  //   myCar.obstacleAvoiding();
-  // }
+  }
+  else if(modeControl == MODE_THREE){
+    myCar.obstacleAvoiding();
+  }
 }
 
 void GPIO_Init(){

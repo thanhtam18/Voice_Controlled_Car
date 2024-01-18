@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <Arduino.h>
 #include <main_file.h>
+#include <HCSR04.h>
 
 #define CONTROL_SPEED_MOTOR_LEFT    6
 #define ENABLE1_MOTOR_LEFT          8
@@ -18,6 +19,8 @@
 #define CONTROL_SPEED_MOTOR_RIGHT   5
 #define ENABLE1_MOTOR_RIGHT         4
 #define ENABLE2_MOTOR_RIGHT         7
+
+
 
 #define CONTROL_SPEED(controlSpeed, value)       analogWrite(controlSpeed, value);
 #define ENABLE_MOTOR(enableMotor, level)         digitalWrite(enableMotor, level);
@@ -28,6 +31,11 @@
 #define READ_SENSOR_LEFT                         analogRead(LINE_SENSOR_LEFT);
 #define READ_SENSOR_RIGHT                        analogRead(LINE_SENSOR_RIGHT);
 
+
+
+
+
+
 #define HANDLE_UART(condition, action, modeReturn)  if(Serial.available()){\
                                                         if(Serial.read() == condition){\
                                                             action();\
@@ -36,7 +44,7 @@
                                                             return;\
                                                         }\
                                                     }
-#define TEST(a, b)  a(); uint8_t *ptr = b; *ptr = MODE_DEFAULT; return;
+
 typedef enum{
     LEFT = -1,
     MID,

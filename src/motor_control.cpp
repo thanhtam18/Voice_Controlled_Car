@@ -52,19 +52,19 @@ void Car :: goBackward(){
     Ouput: None
 */
 void Car :: turnLeft(){
-    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 240);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 250);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
-    delay(500);
+    delay(1000);
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
 }
 
 /*
-    Function: turnLeft
+    Function: turnRight
     Description: This function will make the car turn right
     Input: None
     Ouput: None
@@ -76,13 +76,13 @@ void Car :: turnRight(){
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
-    delay(500);
+    delay(1000);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
 }
 
 /*
-    Function: turnLeft
+    Function: stop
     Description: This function will make the car stop
     Input: None
     Ouput: None
@@ -103,25 +103,47 @@ void Car :: stop(){
     Ouput: None
 */
 void Car :: lineFollower(){
-    // ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
-    // ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
-    // ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
-    // ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
-    // double PID;
-    // int8_t lineDetected;
-    // while((lineDetected = lineDetection()) != STOP_LINE){
-    //     PID = calculatePID(lineDetected);
-    //     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain((speedMotorLeftInit + PID),0, 255));
-    //     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain((speedMotorRightInit - PID),0, 255));
-    //     HANDLE_UART(STOP, stop, &modeControl);
-    // } 
-    // stop();
-    Serial.println("Follow line");
-    TEST(stop,&modeControl);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+    double PID;
+    int8_t lineDetected;
+    while((lineDetected = lineDetection()) != STOP_LINE){
+        PID = calculatePID(lineDetected);
+        CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain((speedMotorLeftInit + PID),0, 255));
+        CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain((speedMotorRightInit - PID),0, 255));
+        HANDLE_UART(STOP, stop, &modeControl);
+    } 
+    stop();
 }
 
+static HCSR04 ultrasonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
+
 void Car :: obstacleAvoiding(){
-    Serial.println("Obstacle Avoiding");
+    float distance = ultrasonicSensor.dist();
+    uint8_t index = 0;
+    while(distance <= 15.00){
+        stop();
+        delay(500);
+        switch(index){
+            case 0:
+                turnLeft();
+                break;
+            case 1:
+                turnRight();
+                turnRight();
+                break;
+            case 2:
+                turnRight();
+                index = 0;
+                break;
+        }
+        index++;
+        distance = ultrasonicSensor.dist();
+        HANDLE_UART(STOP, stop, &modeControl);
+    }
+    goForward();
 }
 
 /*
