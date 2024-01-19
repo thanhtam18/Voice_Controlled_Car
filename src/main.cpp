@@ -8,7 +8,7 @@
 jmp_buf buf;
 uint8_t command;
 
-uint8_t modeControl = MODE_THREE;
+uint8_t modeControl = MODE_TWO;
 Car myCar;
 
 
@@ -17,11 +17,7 @@ void setup() {
   Serial.begin(9600);
   GPIO_Init();
   myCar.myCarInit(150,190);
-  while (1)
-  {
-    /* code */
-  }
-  
+  delay(1000);
 }
 
 

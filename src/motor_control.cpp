@@ -108,17 +108,36 @@ void Car :: stop(){
     Ouput: None
 */
 void Car :: lineFollower(){
-    
-    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
-    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
-    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
-    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
     double PID;
     int8_t lineDetected;
     while((lineDetected = lineDetection()) != DETECTED_STOP_LINE){
-        PID = calculatePID(lineDetected);
-        CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain((speedMotorLeftInit + PID),0, 255));
-        CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain((speedMotorRightInit - PID),0, 255));
+        //PID = calculatePID(lineDetected);
+        switch(lineDetected){
+            case DETECTED_LEFT:
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 80);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
+                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+                break;
+            case DETECTED_RIGHT:
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 250);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 80);
+                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+                break;
+            case DETECTED_MID:
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 160);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 160);
+                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+                break;
+        }
         HANDLE_UART(STOP, stop, &modeControl);
     } 
     stop();
@@ -175,11 +194,11 @@ void Car :: obstacleAvoiding(){
 int8_t Car :: lineDetection(){
     uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
     uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
-    if(leftSensorAnalog > 400)
+    if(leftSensorAnalog > 500 && rightSensorAnalog < 500)
         return DETECTED_LEFT;
-    else if(rightSensorAnalog > 400)
+    else if(rightSensorAnalog > 500 && leftSensorAnalog < 500)
         return DETECTED_RIGHT;
-    else    
+    else if (rightSensorAnalog > 500 && leftSensorAnalog > 500)
         return DETECTED_STOP_LINE;
     return DETECTED_MID;
 }
