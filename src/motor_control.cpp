@@ -1,5 +1,8 @@
 #include <motor_control.h>
 
+static Servo myServo;
+static HCSR04 ultrasonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
+
 /*
     Function: speedMotorInit
     Description: This function set PWM for motor left and right
@@ -10,9 +13,11 @@
 
     Ouput: None
 */
-void Car :: speedMotorInit(uint8_t speedMotorLeft, uint8_t speedMotorRight){
+void Car :: myCarInit(uint8_t speedMotorLeft, uint8_t speedMotorRight){
     this->speedMotorLeftInit = speedMotorLeft;
     this->speedMotorRightInit = speedMotorRight;
+    myServo.attach(CONTROL_SERVO);
+    myServo.write(90);
 }
 
 /*
@@ -103,13 +108,14 @@ void Car :: stop(){
     Ouput: None
 */
 void Car :: lineFollower(){
+    
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
     double PID;
     int8_t lineDetected;
-    while((lineDetected = lineDetection()) != STOP_LINE){
+    while((lineDetected = lineDetection()) != DETECTED_STOP_LINE){
         PID = calculatePID(lineDetected);
         CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain((speedMotorLeftInit + PID),0, 255));
         CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain((speedMotorRightInit - PID),0, 255));
@@ -118,31 +124,45 @@ void Car :: lineFollower(){
     stop();
 }
 
-static HCSR04 ultrasonicSensor(ULTRASONIC_TRIG, ULTRASONIC_ECHO);
+
 
 void Car :: obstacleAvoiding(){
     float distance = ultrasonicSensor.dist();
     uint8_t index = 0;
     while(distance <= 15.00){
         stop();
-        delay(500);
         switch(index){
             case 0:
-                turnLeft();
+                myServo.write(180);
+                delay(200);
+                if((distance = ultrasonicSensor.dist()) > 15){
+                    turnLeft();
+                    index = 0;
+                    break;
+                }         
+                index++;
+                myServo.write(90);
                 break;
             case 1:
-                turnRight();
-                turnRight();
+                myServo.write(0);
+                delay(200);
+                if((distance = ultrasonicSensor.dist()) > 15){
+                    turnRight();
+                    index = 0;
+                    break;
+                }                
+                index++;
+                myServo.write(90);
                 break;
             case 2:
-                turnRight();
+                goBackward();
+                delay(500);
                 index = 0;
                 break;
         }
-        index++;
-        distance = ultrasonicSensor.dist();
         HANDLE_UART(STOP, stop, &modeControl);
     }
+
     goForward();
 }
 
@@ -156,12 +176,12 @@ int8_t Car :: lineDetection(){
     uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
     uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
     if(leftSensorAnalog > 400)
-        return LEFT;
+        return DETECTED_LEFT;
     else if(rightSensorAnalog > 400)
-        return RIGHT;
+        return DETECTED_RIGHT;
     else    
-        return STOP_LINE;
-    return MID;
+        return DETECTED_STOP_LINE;
+    return DETECTED_MID;
 }
 
 /*

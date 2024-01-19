@@ -10,10 +10,8 @@
 #include "setjmp.h"
 #include <stdint.h>
 
-jmp_buf buf;
-uint8_t command;
-#define TRY(x)    if ((command = setjmp(buf)) == (x)) 
-#define CATCH(x)  else if (command == (x)) 
-#define THROW(x)  longjmp(buf, (x));
+#define TRY(aim, buffer, value)    if ((aim = setjmp(buffer)) == (value)) 
+#define CATCH(aim , value)  else if (aim == (value)) 
+#define THROW(buffer, value)  longjmp(buffer, (value));
 
 #endif

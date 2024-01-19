@@ -11,6 +11,8 @@
 #include <Arduino.h>
 #include <main_file.h>
 #include <HCSR04.h>
+#include <Servo.h>
+#include <try_catch.h>
 
 #define CONTROL_SPEED_MOTOR_LEFT    6
 #define ENABLE1_MOTOR_LEFT          8
@@ -31,7 +33,7 @@
 #define READ_SENSOR_LEFT                         analogRead(LINE_SENSOR_LEFT);
 #define READ_SENSOR_RIGHT                        analogRead(LINE_SENSOR_RIGHT);
 
-
+#define CONTROL_SERVO               11
 
 
 
@@ -46,13 +48,20 @@
                                                     }
 
 typedef enum{
-    LEFT = -1,
-    MID,
-    RIGHT,
-    STOP_LINE
+    DETECTED_LEFT = -1,
+    DETECTED_MID,
+    DETECTED_RIGHT,
+    DETECTED_STOP_LINE
 }LineDetect;
 
+typedef enum{
+    LEFT,
+    RIGHT
+}Direction;
+
 extern uint8_t modeControl;
+
+
 
 class Car{
     private:
@@ -65,7 +74,7 @@ class Car{
         int8_t lineDetection();
     public:
         Car(){Kp = 10; Ki = 3; Kd = 5;};
-        void speedMotorInit(uint8_t speedMotorLeft, uint8_t speedMotorRight);
+        void myCarInit(uint8_t speedMotorLeft, uint8_t speedMotorRight);
         void goForward();
         void goBackward();
         void turnLeft();

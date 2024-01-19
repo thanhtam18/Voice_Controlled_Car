@@ -1,21 +1,27 @@
 #include <Arduino.h>
 #include <main_file.h>
 #include <try_catch.h>
-#include <Servo.h>
 #include <motor_control.h>
+#include <Servo.h>
+
+
+jmp_buf buf;
+uint8_t command;
 
 uint8_t modeControl = MODE_THREE;
 Car myCar;
 
-Servo myServo;
+
 
 void setup() {
   Serial.begin(9600);
   GPIO_Init();
-  myCar.speedMotorInit(150,190);
-  myServo.attach(11);
-  myServo.write(180);
-  while(1);
+  myCar.myCarInit(150,190);
+  while (1)
+  {
+    /* code */
+  }
+  
 }
 
 
@@ -23,7 +29,7 @@ void loop() {
   if(Serial.available()){
     uint8_t receiveHexValue = Serial.read();
     if((receiveHexValue & 0x08) && !(modeControl - MODE_ONE)){
-      THROW((Command)receiveHexValue);
+      THROW(buf, (Command)receiveHexValue);
     }
     switch(receiveHexValue){
       case 0x01:
@@ -41,15 +47,15 @@ void loop() {
     }
   }
   if(modeControl == MODE_ONE){
-    TRY(FORWARD)
+    TRY(command, buf, FORWARD)
       myCar.goForward();
-    CATCH(BACKWARD)
+    CATCH(command, BACKWARD)
       myCar.goBackward();
-    CATCH(TURN_LEFT)
+    CATCH(command, TURN_LEFT)
       myCar.turnLeft();
-    CATCH(TURN_RIGHT)
+    CATCH(command, TURN_RIGHT)
       myCar.turnRight();
-    CATCH(STOP)
+    CATCH(command, STOP)
       myCar.stop();
   }
   else if(modeControl == MODE_TWO){
