@@ -63,7 +63,7 @@ void Car :: turnLeft(){
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
-    delay(1000);
+    delay(600);
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
 }
@@ -75,13 +75,13 @@ void Car :: turnLeft(){
     Ouput: None
 */
 void Car :: turnRight(){
-    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 240);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 250);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
-    delay(1000);
+    delay(600);
     ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
 }
@@ -93,12 +93,12 @@ void Car :: turnRight(){
     Ouput: None
 */
 void Car :: stop(){
-    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
-    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
-    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
-    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
-    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
-    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 255);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 255);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
 }
 
 /*
@@ -114,7 +114,7 @@ void Car :: lineFollower(){
         //PID = calculatePID(lineDetected);
         switch(lineDetected){
             case DETECTED_LEFT:
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 80);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 100);
                 CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
                 ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
                 ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
@@ -123,7 +123,7 @@ void Car :: lineFollower(){
                 break;
             case DETECTED_RIGHT:
                 CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 250);
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 80);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 100);
                 ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
                 ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
                 ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
@@ -146,44 +146,55 @@ void Car :: lineFollower(){
 
 
 void Car :: obstacleAvoiding(){
+    
     float distance = ultrasonicSensor.dist();
-    uint8_t index = 0;
-    while(distance <= 15.00){
-        stop();
-        switch(index){
-            case 0:
-                myServo.write(180);
-                delay(200);
-                if((distance = ultrasonicSensor.dist()) > 15){
-                    turnLeft();
-                    index = 0;
-                    break;
-                }         
-                index++;
-                myServo.write(90);
-                break;
-            case 1:
-                myServo.write(0);
-                delay(200);
-                if((distance = ultrasonicSensor.dist()) > 15){
-                    turnRight();
-                    index = 0;
-                    break;
-                }                
-                index++;
-                myServo.write(90);
-                break;
-            case 2:
-                goBackward();
-                delay(500);
-                index = 0;
-                break;
-        }
-        HANDLE_UART(STOP, stop, &modeControl);
+    while(distance > 15.0){
+        goForward();
+        distance = ultrasonicSensor.dist();
+        delay(60);
     }
-
-    goForward();
-}
+    bool isAnotherWay = false;
+        stop();
+        uint8_t index = 1;
+        while(!isAnotherWay){
+            switch(index){
+                case 1:
+                    index++;
+                    myServo.write(180);
+                    delay(500);
+                    distance = ultrasonicSensor.dist();
+                    myServo.write(90);
+                    delay(500);
+                    if(distance > 15.0){
+                        turnLeft();
+                        index = 0;
+                        isAnotherWay = true;
+                    }
+                    break;
+                case 2:
+                    index++;
+                    myServo.write(0);
+                    delay(500);
+                    distance = ultrasonicSensor.dist();
+                    myServo.write(90);
+                    delay(500);
+                    if(distance > 15.0){
+                        turnRight();
+                        index = 0;
+                        isAnotherWay = true;
+                    }
+                    break;
+                case 3:
+                    goBackward();
+                    delay(500);
+                    stop();
+                    index = 1;
+                    break;
+            }
+            HANDLE_UART(STOP, stop, &modeControl);
+        }
+        
+    }
 
 /*
     Function: lineDetection
