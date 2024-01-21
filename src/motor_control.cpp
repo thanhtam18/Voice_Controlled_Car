@@ -141,6 +141,7 @@ void Car :: lineFollower(){
         HANDLE_UART(STOP, stop, &modeControl);
     } 
     stop();
+    HANDLE_UART(STOP, stop, &modeControl);
 }
 
 
@@ -152,6 +153,7 @@ void Car :: obstacleAvoiding(){
         goForward();
         distance = ultrasonicSensor.dist();
         delay(60);
+        HANDLE_UART(STOP, stop, &modeControl);
     }
     bool isAnotherWay = false;
         stop();
