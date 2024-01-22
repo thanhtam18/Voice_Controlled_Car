@@ -16,7 +16,7 @@ Car myCar;
 void setup() {
   Serial.begin(9600);
   GPIO_Init();
-  myCar.myCarInit(150,190);
+  myCar.myCarInit(255,255);
   delay(1000);
 }
 
