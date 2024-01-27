@@ -8,7 +8,7 @@
 jmp_buf buf;
 uint8_t command;
 
-uint8_t modeControl = MODE_ONE;
+uint8_t modeControl = MODE_TWO;
 Car myCar;
 
 

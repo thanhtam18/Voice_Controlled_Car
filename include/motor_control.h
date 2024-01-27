@@ -12,7 +12,7 @@
 #include <main_file.h>
 #include <HCSR04.h>
 #include <Servo.h>
-#include <try_catch.h>
+
 
 #define CONTROL_SPEED_MOTOR_LEFT    6
 #define ENABLE1_MOTOR_LEFT          8

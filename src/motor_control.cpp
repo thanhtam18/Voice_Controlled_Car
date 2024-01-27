@@ -99,6 +99,24 @@ void Car :: stop(){
     ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
     ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
     ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
+}
+
+void _break(){
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 255);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 255);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+    _delay_us(700);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
 }
 
 /*
@@ -108,34 +126,47 @@ void Car :: stop(){
     Ouput: None
 */
 void Car :: lineFollower(){
-    double PID;
     int8_t lineDetected;
     while((lineDetected = lineDetection()) != DETECTED_STOP_LINE){
-        //PID = calculatePID(lineDetected);
         switch(lineDetected){
             case DETECTED_LEFT:
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 100);
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 250);
-                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
-                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
-                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
-                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+                _break();
+                while ((lineDetected = lineDetection()) != DETECTED_MID && (lineDetected = lineDetection()) != DETECTED_STOP_LINE)
+                {                                   
+                    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+                    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+                    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+                    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 180);
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 255);
+                }
+                stop();
                 break;
             case DETECTED_RIGHT:
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 250);
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 100);
-                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
-                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
-                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
-                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+                _break();
+                while ((lineDetected = lineDetection()) != DETECTED_MID && (lineDetected = lineDetection()) != DETECTED_STOP_LINE)
+                {                                   
+                    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+                    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+                    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+                    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);             
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 255);
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 180);
+                }               
+                stop();
                 break;
             case DETECTED_MID:
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 160);
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 160);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
+                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
                 ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
                 ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
                 ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
                 ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+                for(int i = 100; (lineDetected = lineDetection()) == DETECTED_MID && i < 161; i++){
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, i);
+                    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, i);
+                    delay(5);
+                }
                 break;
         }
         HANDLE_UART(STOP, stop, &modeControl);
@@ -214,22 +245,4 @@ int8_t Car :: lineDetection(){
     else if (rightSensorAnalog > 500 && leftSensorAnalog > 500)
         return DETECTED_STOP_LINE;
     return DETECTED_MID;
-}
-
-/*
-    Function: calculatePID
-    Description: Calculate PID value
-    Input: Error value after detected line 
-    Ouput: PID value
-*/
-double Car :: calculatePID(int8_t error){
-    register uint8_t l_Kp = this->Kp;
-    register uint8_t l_Ki = this->Ki;
-    register uint8_t l_Kd = this->Kd;
-    static int8_t lastError;
-    static int8_t integral;
-    integral += error;
-    int8_t derivative = error - lastError;
-    lastError = error;
-    return (l_Kp * error + l_Ki * integral + l_Kd * derivative);
 }
