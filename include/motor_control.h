@@ -13,7 +13,6 @@
 #include <HCSR04.h>
 #include <Servo.h>
 
-
 #define CONTROL_SPEED_MOTOR_LEFT    6
 #define ENABLE1_MOTOR_LEFT          8
 #define ENABLE2_MOTOR_LEFT          9    
@@ -22,21 +21,20 @@
 #define ENABLE1_MOTOR_RIGHT         4
 #define ENABLE2_MOTOR_RIGHT         7
 
-
-
 #define CONTROL_SPEED(controlSpeed, value)       analogWrite(controlSpeed, value);
 #define ENABLE_MOTOR(enableMotor, level)         digitalWrite(enableMotor, level);
 
 #define LINE_SENSOR_LEFT            A1
+#define LINE_SENSOR_MID             A2
 #define LINE_SENSOR_RIGHT           A3
 
 #define READ_SENSOR_LEFT                         analogRead(LINE_SENSOR_LEFT);
+#define READ_SENSOR_MID                          analogRead(LINE_SENSOR_MID);
 #define READ_SENSOR_RIGHT                        analogRead(LINE_SENSOR_RIGHT);
 
+#define DETECTED            400
+
 #define CONTROL_SERVO               11
-
-
-
 
 #define HANDLE_UART(condition, action, modeReturn)  if(Serial.available()){\
                                                         if(Serial.read() == condition){\
@@ -48,32 +46,24 @@
                                                     }
 
 typedef enum{
-    DETECTED_LEFT = -1,
+    DETECTED_LEFT = -2,
+    DETECTED__HALF_LEFT,
     DETECTED_MID,
+    DETECTED__HALF_RIGHT,
     DETECTED_RIGHT,
     DETECTED_STOP_LINE
 }LineDetect;
 
-typedef enum{
-    LEFT,
-    RIGHT
-}Direction;
-
 extern uint8_t modeControl;
-
-
 
 class Car{
     private:
         uint8_t speedMotorLeftInit;
         uint8_t speedMotorRightInit;
-        uint8_t Kp;
-        uint8_t Ki;
-        uint8_t Kd;
-        double calculatePID(int8_t error);
-        int8_t lineDetection();
+        float Kp , Kd , Ki;
+        void PID();
     public:
-        Car(){Kp = 10; Ki = 3; Kd = 5;};
+        Car(){Kp = 170, Ki = 0.1, Kd = 70;};
         void myCarInit(uint8_t speedMotorLeft, uint8_t speedMotorRight);
         void goForward();
         void goBackward();

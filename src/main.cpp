@@ -4,20 +4,15 @@
 #include <motor_control.h>
 #include <Servo.h>
 
-
 jmp_buf buf;
 uint8_t command;
-
 uint8_t modeControl = MODE_TWO;
 Car myCar;
-
-
 
 void setup() {
   Serial.begin(9600);
   GPIO_Init();
-  myCar.myCarInit(255,255);
-  delay(1000);
+  myCar.myCarInit(200,200);
 }
 
 
@@ -29,15 +24,12 @@ void loop() {
     }
     switch(receiveHexValue){
       case 0x01:
-        ledToggle(1);
         modeControl = MODE_ONE;
         break;
       case 0x02:
-        ledToggle(2);
         modeControl = MODE_TWO;
         break;
       case 0x03:
-        ledToggle(3);
         modeControl = MODE_THREE;
         break;
     }
@@ -65,21 +57,11 @@ void loop() {
 void GPIO_Init(){
   pinMode(LINE_SENSOR_LEFT, INPUT);
   pinMode(LINE_SENSOR_RIGHT, INPUT);
+  pinMode(LINE_SENSOR_MID, INPUT);
   pinMode(CONTROL_SPEED_MOTOR_LEFT, OUTPUT);
   pinMode(ENABLE1_MOTOR_LEFT, OUTPUT);
   pinMode(ENABLE2_MOTOR_LEFT, OUTPUT);
   pinMode(CONTROL_SPEED_MOTOR_RIGHT, OUTPUT);
   pinMode(ENABLE1_MOTOR_RIGHT, OUTPUT);
   pinMode(ENABLE2_MOTOR_RIGHT, OUTPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
-}
-
-void ledToggle(uint8_t times){
-  while(times-- > 0){
-    digitalWrite(LED_BUILTIN,!digitalRead(LED_BUILTIN));
-    delay(100);
-    digitalWrite(LED_BUILTIN,!digitalRead(LED_BUILTIN));
-    delay(100);
-  }
-
 }
