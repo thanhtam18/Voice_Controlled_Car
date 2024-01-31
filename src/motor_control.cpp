@@ -208,27 +208,33 @@ void Car :: lineFollower(){
             uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
             uint16_t midSensorAnalog = READ_SENSOR_MID;
             uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
-            if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-                left();
+            float distance = ultrasonicSensor.dist();
+            if(distance > 20.0){
+                if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                    left();
+                }
+                else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
+                    forward();
+                }
+                else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                    right();
+                }
+                else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
+                    stop();
+                }
             }
-            else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
-                forward();
-            }
-            else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-                right();
-            }
-            else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
+            else{
                 stop();
             }
         #endif
-        HANDLE_UART(STOP, stop, &modeControl);
+        HANDLE_UART(MODE_TWO, stop, &modeControl);
         }
 }
 
 
 void Car :: obstacleAvoiding(){
     float distance = ultrasonicSensor.dist();
-    while(distance > 15.0){
+    while(distance > 20.0){
         goForward();
         distance = ultrasonicSensor.dist();
         delay(60);
@@ -246,7 +252,7 @@ void Car :: obstacleAvoiding(){
                 distance = ultrasonicSensor.dist();
                 myServo.write(90);
                 delay(500);
-                if(distance > 15.0){
+                if(distance > 20.0){
                     turnLeft();
                     index = 0;
                     isAnotherWay = true;
@@ -259,7 +265,7 @@ void Car :: obstacleAvoiding(){
                 distance = ultrasonicSensor.dist();
                 myServo.write(90);
                 delay(500);
-                if(distance > 15.0){
+                if(distance > 20.0){
                     turnRight();
                     index = 0;
                     isAnotherWay = true;
@@ -272,6 +278,6 @@ void Car :: obstacleAvoiding(){
                 index = 1;
                 break;
         }
-        HANDLE_UART(STOP, stop, &modeControl);
+        HANDLE_UART(MODE_THREE, stop, &modeControl);
     }
 }

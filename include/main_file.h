@@ -6,6 +6,13 @@
 #ifndef _MAIN_FILE_H
 #define _MAIN_FILE_H
 
+#include "setjmp.h"
+#include <stdint.h>
+
+#define TRY(aim, buffer, value)    if ((aim = setjmp(buffer)) == (value)) 
+#define CATCH(aim , value)  else if (aim == (value)) 
+#define THROW(buffer, value)  longjmp(buffer, (value));
+
 typedef enum{
   MODE_DEFAULT,   
   MODE_ONE,   

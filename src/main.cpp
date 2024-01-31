@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <main_file.h>
-#include <try_catch.h>
 //#define PID_MODE
 #include <motor_control.h>
 #include <Servo.h>

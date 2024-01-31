@@ -36,15 +36,26 @@
 
 #define CONTROL_SERVO               11
 
-#define HANDLE_UART(condition, action, modeReturn)  if(Serial.available()){\
-                                                        if(Serial.read() == condition){\
-                                                            action();\
-                                                            uint8_t *ptr = modeReturn;\
-                                                            *ptr = MODE_DEFAULT;\
-                                                            return;\
-                                                        }\
-                                                    }
-
+#define HANDLE_UART(condition, action, modeReturn)                                                          \
+    if(Serial.available()){                                                                                 \
+        uint8_t read = Serial.read();                                                                       \
+        if((read != condition) && ((read == MODE_ONE) ||  (read == MODE_TWO) || (read == MODE_THREE))){     \
+            action();                                                                                       \
+            uint8_t *ptr = modeReturn;                                                                      \
+            switch(read){                                                                                   \
+                case MODE_ONE:                                                                              \
+                    *ptr = MODE_ONE;                                                                        \
+                    break;                                                                                  \
+                case MODE_TWO:                                                                              \
+                    *ptr = MODE_TWO;                                                                        \
+                    break;                                                                                  \
+                case MODE_THREE:                                                                            \
+                    *ptr = MODE_THREE;                                                                      \
+                    break;                                                                                  \
+            }                                                                                               \
+            return;                                                                                         \
+        }                                                                                                   \
+    }
 
 
 typedef enum{
