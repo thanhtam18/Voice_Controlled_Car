@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <main_file.h>
 #include <try_catch.h>
+#define PID_MODE
 #include <motor_control.h>
 #include <Servo.h>
 
@@ -12,7 +13,7 @@ Car myCar;
 void setup() {
   Serial.begin(9600);
   GPIO_Init();
-  myCar.myCarInit(200,200);
+  myCar.myCarInit(140,140);
 }
 
 

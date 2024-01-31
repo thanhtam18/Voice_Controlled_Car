@@ -22,6 +22,5 @@ typedef enum{
 }Command;
 
 void GPIO_Init();
-void ledToggle(uint8_t times);
 
 #endif

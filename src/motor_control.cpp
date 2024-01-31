@@ -95,7 +95,7 @@ void Car :: stop(){
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 0);
     CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 0);
 }
-
+#if defined(PID_MODE)
 float P, D, I, PID_value;
 int error, pre_error;
 
@@ -113,17 +113,14 @@ void Car :: PID(){
     Input: None
     Ouput: Error value
 */
+
 static int lineDetection(){
     uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
     uint16_t midSensorAnalog = READ_SENSOR_MID;
     uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
     //Serial.println(String(leftSensorAnalog) + "  " + String(midSensorAnalog) + "   " + String(rightSensorAnalog));
     static LineDetect lastDetected;
-    if(leftSensorAnalog > DETECTED && midSensorAnalog < DETECTED && rightSensorAnalog < DETECTED){
-      lastDetected = DETECTED_LEFT;
-      return DETECTED_LEFT;
-    }
-    else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
+    if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
       lastDetected = DETECTED_LEFT;
       return DETECTED_LEFT;
     }
@@ -131,11 +128,7 @@ static int lineDetection(){
       lastDetected = DETECTED_MID;
       return DETECTED_MID;
     }
-    else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
-      lastDetected = DETECTED_RIGHT;
-      return DETECTED_RIGHT;
-    }
-    else if(leftSensorAnalog < DETECTED && midSensorAnalog < DETECTED && rightSensorAnalog > DETECTED){
+    else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
       lastDetected = DETECTED_RIGHT;
       return DETECTED_RIGHT;
     }
@@ -146,6 +139,32 @@ static int lineDetection(){
     else
       return lastDetected;
 }
+#else
+void Car :: forward(){
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 150);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 150);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+}
+void Car :: left(){
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 190);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 190);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);
+}
+void Car :: right(){
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, 190);
+    CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, 190);
+    ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
+    ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+    ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+}
+#endif
 
 /*
     Description: This function will make follow the line
@@ -154,6 +173,7 @@ static int lineDetection(){
 */
 void Car :: lineFollower(){
     while(1){
+        #if defined(PID_MODE)
         error = lineDetection();
         PID();
         if(error != DETECTED_STOP_LINE){
@@ -184,9 +204,27 @@ void Car :: lineFollower(){
         else{
             stop();
         }
+        #else
+            uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
+            uint16_t midSensorAnalog = READ_SENSOR_MID;
+            uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
+            if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                left();
+            }
+            else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
+                forward();
+            }
+            else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                right();
+            }
+            else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
+                stop();
+            }
+        #endif
         HANDLE_UART(STOP, stop, &modeControl);
-    }
+        }
 }
+
 
 void Car :: obstacleAvoiding(){
     float distance = ultrasonicSensor.dist();

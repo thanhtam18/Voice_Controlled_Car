@@ -45,6 +45,8 @@
                                                         }\
                                                     }
 
+
+
 typedef enum{
     DETECTED_LEFT = -2,
     DETECTED__HALF_LEFT,
@@ -62,8 +64,11 @@ class Car{
         uint8_t speedMotorRightInit;
         float Kp , Kd , Ki;
         void PID();
+        void forward();
+        void left();
+        void right();
     public:
-        Car(){Kp = 170, Ki = 0.1, Kd = 70;};
+        Car(){Kp = 170, Ki = 0.1, Kd = 100;};
         void myCarInit(uint8_t speedMotorLeft, uint8_t speedMotorRight);
         void goForward();
         void goBackward();
