@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include <main_file.h>
 #include <try_catch.h>
-#define PID_MODE
+//#define PID_MODE
 #include <motor_control.h>
 #include <Servo.h>
 
 jmp_buf buf;
 uint8_t command;
-uint8_t modeControl = MODE_TWO;
+uint8_t modeControl = MODE_ONE;
 Car myCar;
 
 void setup() {
