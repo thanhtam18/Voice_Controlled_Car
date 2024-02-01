@@ -172,112 +172,102 @@ void Car :: right(){
     Ouput: None
 */
 void Car :: lineFollower(){
-    while(1){
-        #if defined(PID_MODE)
-        error = lineDetection();
-        PID();
-        if(error != DETECTED_STOP_LINE){
-            int leftMotorSpeed = 150 + PID_value;
-            int rightMotorSpeed = 150 - PID_value;
-            if(leftMotorSpeed < 0){
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, -1*(constrain(leftMotorSpeed, -190, 0)));
-                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
-                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);  
-            }
-            else{
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain(leftMotorSpeed, 0, 255));
-                ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
-                ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
-            }
-            if(rightMotorSpeed < 0){
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, -1*(constrain(rightMotorSpeed, -190, 0)));
-                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
-                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
-            } 
-            else{
-                CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain(rightMotorSpeed, 0, 255));
-                ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
-                ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);    
-            }
-            
+    #if defined(PID_MODE)
+    error = lineDetection();
+    PID();
+    if(error != DETECTED_STOP_LINE){
+        int leftMotorSpeed = 150 + PID_value;
+        int rightMotorSpeed = 150 - PID_value;
+        if(leftMotorSpeed < 0){
+            CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, -1*(constrain(leftMotorSpeed, -190, 0)));
+            ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, LOW);
+            ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, HIGH);  
         }
         else{
-            stop();
+            CONTROL_SPEED(CONTROL_SPEED_MOTOR_LEFT, constrain(leftMotorSpeed, 0, 255));
+            ENABLE_MOTOR(ENABLE1_MOTOR_LEFT, HIGH);
+            ENABLE_MOTOR(ENABLE2_MOTOR_LEFT, LOW);
         }
-        #else
-            uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
-            uint16_t midSensorAnalog = READ_SENSOR_MID;
-            uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
-            float distance = ultrasonicSensor.dist();
-            if(distance > 20.0){
-                if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-                    left();
-                }
-                else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
-                    forward();
-                }
-                else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-                    right();
-                }
-                else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
-                    stop();
-                }
-            }
-            else{
-                stop();
-            }
-        #endif
-        HANDLE_UART(MODE_TWO, stop, &modeControl);
+        if(rightMotorSpeed < 0){
+            CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, -1*(constrain(rightMotorSpeed, -190, 0)));
+            ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, HIGH);
+            ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, LOW);
+        } 
+        else{
+            CONTROL_SPEED(CONTROL_SPEED_MOTOR_RIGHT, constrain(rightMotorSpeed, 0, 255));
+            ENABLE_MOTOR(ENABLE1_MOTOR_RIGHT, LOW);
+            ENABLE_MOTOR(ENABLE2_MOTOR_RIGHT, HIGH);    
         }
+    }
+    else{
+        stop();
+    }
+    #else
+        uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
+        uint16_t midSensorAnalog = READ_SENSOR_MID;
+        uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
+    if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+        left();
+    }
+    else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
+        forward();
+    }
+    else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+        right();
+    }
+    else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
+        stop();
+    }
+    #endif
 }
 
 
 void Car :: obstacleAvoiding(){
+    delay(60);
+    static bool isAnotherWay = true;
     float distance = ultrasonicSensor.dist();
-    while(distance > 20.0){
+    if(distance > 20.0 && isAnotherWay){
         goForward();
-        distance = ultrasonicSensor.dist();
-        delay(60);
-        HANDLE_UART(STOP, stop, &modeControl);
     }
-    bool isAnotherWay = false;
-    stop();
-    uint8_t index = 1;
-    while(!isAnotherWay){
+    else{
+        isAnotherWay = false;
+        stop();
+        static uint8_t index = 1;
         switch(index){
-            case 1:
-                index++;
-                myServo.write(180);
-                delay(500);
-                distance = ultrasonicSensor.dist();
-                myServo.write(90);
-                delay(500);
-                if(distance > 20.0){
-                    turnLeft();
-                    index = 0;
-                    isAnotherWay = true;
-                }
-                break;
-            case 2:
-                index++;
-                myServo.write(0);
-                delay(500);
-                distance = ultrasonicSensor.dist();
-                myServo.write(90);
-                delay(500);
-                if(distance > 20.0){
-                    turnRight();
-                    index = 0;
-                    isAnotherWay = true;
-                }
-                break;
-            case 3:
-                goBackward();
-                delay(500);
-                stop();
-                index = 1;
-                break;
+                case 1:
+                    myServo.write(180);
+                    delay(500);
+                    distance = ultrasonicSensor.dist();                
+                    myServo.write(90);   
+                    delay(500);     
+                    if(distance > 20.0){
+                        turnLeft();
+                        isAnotherWay = true;
+                        index = 1;
+                    }
+                    else
+                        index++;
+                    break;
+                case 2:
+                    myServo.write(0);
+                    delay(500);
+                    distance = ultrasonicSensor.dist();
+                    myServo.write(90);
+                    delay(500);
+                    if(distance > 20.0){
+                        turnRight();
+                        isAnotherWay = true;
+                        index = 1;
+                    }
+                    else
+                        index++;
+                    break;
+                case 3:
+                    goBackward();
+                    delay(500);
+                    stop();
+                    index = 1;
+                    break;
         }
-        HANDLE_UART(MODE_THREE, stop, &modeControl);
     }
 }

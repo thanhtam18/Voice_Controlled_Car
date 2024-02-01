@@ -32,31 +32,9 @@
 #define READ_SENSOR_MID                          analogRead(LINE_SENSOR_MID);
 #define READ_SENSOR_RIGHT                        analogRead(LINE_SENSOR_RIGHT);
 
-#define DETECTED            400
+#define DETECTED                   400
 
-#define CONTROL_SERVO               11
-
-#define HANDLE_UART(condition, action, modeReturn)                                                          \
-    if(Serial.available()){                                                                                 \
-        uint8_t read = Serial.read();                                                                       \
-        if((read != condition) && ((read == MODE_ONE) ||  (read == MODE_TWO) || (read == MODE_THREE))){     \
-            action();                                                                                       \
-            uint8_t *ptr = modeReturn;                                                                      \
-            switch(read){                                                                                   \
-                case MODE_ONE:                                                                              \
-                    *ptr = MODE_ONE;                                                                        \
-                    break;                                                                                  \
-                case MODE_TWO:                                                                              \
-                    *ptr = MODE_TWO;                                                                        \
-                    break;                                                                                  \
-                case MODE_THREE:                                                                            \
-                    *ptr = MODE_THREE;                                                                      \
-                    break;                                                                                  \
-            }                                                                                               \
-            return;                                                                                         \
-        }                                                                                                   \
-    }
-
+#define CONTROL_SERVO               10
 
 typedef enum{
     DETECTED_LEFT = -2,
