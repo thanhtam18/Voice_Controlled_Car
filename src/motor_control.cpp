@@ -206,18 +206,29 @@ void Car :: lineFollower(){
         uint16_t leftSensorAnalog = READ_SENSOR_LEFT;
         uint16_t midSensorAnalog = READ_SENSOR_MID;
         uint16_t rightSensorAnalog = READ_SENSOR_RIGHT;
-    if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-        left();
-    }
-    else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
-        forward();
-    }
-    else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
-        right();
-    }
-    else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
-        stop();
-    }
+        float distance = 0;
+        static unsigned long previous = millis();
+        if(millis() - previous > 60){
+            distance= ultrasonicSensor.dist();
+            previous = millis();
+        }
+        if(distance > 20){
+            if(leftSensorAnalog > DETECTED && rightSensorAnalog < DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                left();
+            }
+            else if(leftSensorAnalog < DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog < DETECTED){
+                forward();
+            }
+            else if(leftSensorAnalog < DETECTED && rightSensorAnalog > DETECTED && (midSensorAnalog < DETECTED || midSensorAnalog >DETECTED)){
+                right();
+            }
+            else if(leftSensorAnalog > DETECTED && midSensorAnalog > DETECTED && rightSensorAnalog > DETECTED){
+                stop();
+            }
+        }
+        else{
+            stop();
+        }
     #endif
 }
 
